@@ -1,0 +1,8 @@
+# Same line endings on every machine (Windows included); shell hooks break with CRLF
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.woff2 binary
+*.ttf binary

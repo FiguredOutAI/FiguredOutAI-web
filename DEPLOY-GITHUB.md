@@ -58,7 +58,13 @@ File Manager → move `domains/figuredoutai.com/content-live` back into `public_
 | /admin/ | logs in with the existing password, old leads still there |
 | Join the waitlist with your own email | "You're in", welcome email arrives (inbox, not spam), Admin → Waitlist shows it; then delete that test entry |
 
-### 7. Admin → Settings
+### 7. Switch on full uptime checks
+GitHub → repo → Settings → Secrets and variables → Actions → **Variables** → New variable
+`SITE_V4` = `true`. The Uptime workflow (every 15 min) then also checks `/waitlist` and `/health.php`.
+A failure opens an issue labelled "outage" (GitHub emails you); it closes by itself on recovery.
+Watch the repo (Watch → All activity) so those emails reach you.
+
+### 8. Admin → Settings
 - Waitlist counter: **Real sign-ups only**, show once it reaches **100**. Do not use the offset mode.
 - Resend API key (paste it yourself), sender `Tanishk from FiguredOutAI <hello@figuredoutai.com>`, send the test email.
 - Google Client ID, if you want "Continue with Google".
@@ -82,3 +88,5 @@ about a minute. If the Action fails, nothing is deployed and the live site stays
 - Never upload code zips through File Manager once Git deployment is on: Hostinger would see local
   changes and the next pull can fail. All code changes go through GitHub.
 - GitHub secret scanning and push protection are on for this repo.
+- Rulesets: `main` and `deploy` can't be force-pushed or deleted. Actions are pinned to commit SHAs and
+  Dependabot proposes updates weekly. Pull requests get the same checks but never publish.

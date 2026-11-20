@@ -1,0 +1,3 @@
+# Server data. Listed here so a git deploy on the server never touches or cleans it.
+content/
+uploads/

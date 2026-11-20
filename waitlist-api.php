@@ -31,6 +31,9 @@ $rl = json_read($rlFile, []);
 $k = hash('sha256', $visitor);
 foreach ($rl as $kk => $times) { $rl[$kk] = array_values(array_filter($times, fn($x) => $x > time() - 3600)); if (!$rl[$kk]) unset($rl[$kk]); }
 if (count($rl[$k] ?? []) >= 20) fail('Easy there. Try again in a bit.', 429);
+// The forwarded address can be faked, so also cap the whole site: a bot rotating fake IPs
+// gets stopped at 600 requests an hour instead of filling the waitlist with junk.
+if (array_sum(array_map('count', $rl)) >= 600) { error_log('Waitlist: site-wide rate cap hit'); fail('We are getting a lot of sign-ups right now. Try again in a few minutes?', 429); }
 $rl[$k][] = time();
 json_write($rlFile, $rl);
 

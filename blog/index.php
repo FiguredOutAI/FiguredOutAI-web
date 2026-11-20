@@ -26,7 +26,7 @@ if ($page > 1) $extra .= '<link rel="prev" href="' . e(url(ltrim($pageUrl($page 
 if ($page < $pages) $extra .= '<link rel="next" href="' . e(url(ltrim($pageUrl($page + 1), '/'))) . "\">\n";
 
 page_open([
-    'title' => $title, 'description' => $desc, 'canonical' => url(ltrim($pageUrl($page), '/')), 'extra' => $extra, 'og_kicker' => 'Blog',
+    'title' => $title, 'description' => $desc, 'noindex' => $tag && (int)$tags[$tag]['count'] < 3, // thin tag pages: noindex,follow 'canonical' => url(ltrim($pageUrl($page), '/')), 'extra' => $extra, 'og_kicker' => 'Blog',
     'jsonld' => [
         ['@context' => 'https://schema.org', '@type' => 'Blog', 'name' => 'FiguredOutAI Blog', 'url' => url('blog/'), 'publisher' => org_jsonld(),
          'blogPost' => array_map(fn($p) => ['@type' => 'BlogPosting', 'headline' => $p['title'], 'url' => post_url($p), 'datePublished' => date('c', $p['ts'])], $slice)],

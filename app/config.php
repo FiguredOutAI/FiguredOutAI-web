@@ -19,8 +19,8 @@ return [
     // IndexNow key (Bing, Yandex, Seznam, Naver). A matching <key>.txt file sits in the site root.
     'indexnow_key'  => '1b6a662ad711e519bfae8b3c78fb6384',
 
-    // Token for the optional Hostinger cron URL: /app/cron.php is blocked, use /cron.php?token=...
-    'cron_token'    => 'CHANGE-ME-random-string',
+    // Left empty on purpose: the secret is generated on the server into content/secret.json (see app/lib.php).
+    'cron_token'    => '',
 
     'posts_per_page' => 9,
     'default_author' => 'FiguredOutAI Team',

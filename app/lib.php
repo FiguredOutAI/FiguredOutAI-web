@@ -35,6 +35,16 @@ foreach ([__DIR__ . '/.htaccess' => $denyAll, CONTENT . '/.htaccess' => $denyAll
 }
 unset($denyAll, $uploadRules);
 
+// Secrets never live in git. The signing secret (waitlist refs, web cron URL) is generated once
+// on the server and kept in content/secret.json, which is never deployed or committed.
+if (!cfg('cron_token')) {
+    $secFile = CONTENT . '/secret.json';
+    $sec = json_read($secFile, []);
+    if (empty($sec['key'])) { $sec = ['key' => bin2hex(random_bytes(24)), 'created' => date('c')]; json_write($secFile, $sec); }
+    $GLOBALS['CFG']['cron_token'] = $sec['key'];
+    unset($secFile, $sec);
+}
+
 /* ---------------- basics ---------------- */
 function cfg(string $k, $default = null) { return $GLOBALS['CFG'][$k] ?? $default; }
 function e($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }

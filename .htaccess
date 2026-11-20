@@ -1,0 +1,100 @@
+# ==========================================================
+#  FiguredOutAI · Hostinger (Apache / LiteSpeed) config
+# ==========================================================
+Options -Indexes -MultiViews
+DirectoryIndex index.php index.html
+ErrorDocument 404 /404.php
+AddDefaultCharset UTF-8
+AddType application/manifest+json .webmanifest
+AddType font/woff2 .woff2
+AddType image/webp .webp
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Force HTTPS and the bare domain (https://figuredoutai.com)
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301,NE]
+
+# Private folders and files
+RewriteRule ^(app|content)(/|$) - [F,L]
+RewriteRule ^admin/_ - [F,L]
+RewriteRule (^|/)\.(?!well-known) - [F,L]
+
+# Old website URLs (still in Google's index) -> matching sections of the new site
+RewriteRule ^services/?$ /#capabilities [R=301,L,NE]
+RewriteRule ^industries(/.*)?$ /#industries [R=301,L,NE,NC]
+RewriteRule ^contact/?$ /#contact [R=301,L,NE]
+RewriteRule ^(reference-build|decision-layer)/?$ /#platform [R=301,L,NE]
+RewriteRule ^why-us/?$ /#principles [R=301,L,NE]
+RewriteRule ^how-it-works/?$ /#process [R=301,L,NE]
+
+# Clean URLs
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+RewriteRule ^(blog/)?feed\.xml$ feed.php [L]
+RewriteRule ^(privacy|terms|about|waitlist)/$ /$1 [R=301,L]
+RewriteRule ^(privacy|terms|about|waitlist)$ $1.php [L]
+# campaign landing pages: /lp/<name> serves lp/<name>.php (see LANDING-PAGES.md)
+RewriteCond %{DOCUMENT_ROOT}/lp/$1.php -f
+RewriteRule ^lp/([a-z0-9-]+)/?$ lp/$1.php [L]
+RewriteRule ^blog$ /blog/ [R=301,L]
+RewriteRule ^blog/page/([0-9]+)/?$ blog/index.php?page=$1 [L,QSA]
+RewriteRule ^blog/tag/([a-z0-9-]+)/?$ blog/index.php?tag=$1 [L,QSA]
+RewriteRule ^blog/tag/([a-z0-9-]+)/page/([0-9]+)/?$ blog/index.php?tag=$1&page=$2 [L,QSA]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^blog/([a-z0-9-]+)/?$ blog/post.php?slug=$1 [L,QSA]
+
+# Old .php URLs → clean URLs
+RewriteCond %{THE_REQUEST} \s/(privacy|terms|about|waitlist)\.php[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+</IfModule>
+
+# ---------- Compression ----------
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript application/json application/xml application/rss+xml image/svg+xml application/manifest+json
+</IfModule>
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/xml application/rss+xml image/svg+xml application/manifest+json
+</IfModule>
+
+# ---------- Browser caching ----------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType image/webp "access plus 6 months"
+  ExpiresByType image/png "access plus 6 months"
+  ExpiresByType image/jpeg "access plus 6 months"
+  ExpiresByType image/x-icon "access plus 6 months"
+  ExpiresByType application/rss+xml "access plus 1 hour"
+  ExpiresByType application/xml "access plus 1 hour"
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(webp|png|jpe?g|ico|svg)$">
+    Header set Cache-Control "public, max-age=15552000"
+  </FilesMatch>
+  # Security headers
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+  Header always set Content-Security-Policy "upgrade-insecure-requests; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+  Header unset X-Powered-By
+</IfModule>
+
+<FilesMatch "\.(json|jsonl|md|lock|log|tmp|bak|ini|sh|zip|tar|gz|tgz|rar|7z|sql)$">
+  Require all denied
+</FilesMatch>
+<Files "site.webmanifest">
+  Require all granted
+</Files>

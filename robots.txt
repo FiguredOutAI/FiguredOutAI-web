@@ -1,0 +1,39 @@
+# FiguredOutAI: search engines and AI assistants are welcome to read and cite this site.
+# Company summary for AI tools: https://figuredoutai.com/llms.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /app/
+Disallow: /content/
+Disallow: /contact.php
+Disallow: /waitlist-api.php
+Disallow: /consent.php
+Disallow: /cron.php
+
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: Google-Extended
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: DuckAssistBot
+User-agent: Meta-ExternalAgent
+User-agent: CCBot
+Allow: /
+Disallow: /admin/
+Disallow: /app/
+Disallow: /content/
+Disallow: /contact.php
+Disallow: /waitlist-api.php
+Disallow: /consent.php
+Disallow: /cron.php
+
+Sitemap: https://figuredoutai.com/sitemap.xml

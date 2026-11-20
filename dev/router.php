@@ -1,7 +1,7 @@
 <?php
-// Local testing only (php -S localhost:8080 -t public_html dev/router.php).
-// Mirrors the rewrite rules in public_html/.htaccess. Not uploaded to Hostinger.
-$root = realpath(__DIR__ . '/../public_html');
+// Local testing only (php -S localhost:8080 -t . dev/router.php).
+// Mirrors the rewrite rules in .htaccess (the server blocks dev/ itself).
+$root = realpath(__DIR__ . '/..');
 $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 $go = function (string $file, array $get = []) use ($root) {
     $_GET = $get + $_GET;
@@ -10,7 +10,7 @@ $go = function (string $file, array $get = []) use ($root) {
     require "$root/$file";
     return true;
 };
-if (preg_match('~^/(app|content)(/|$)|^/admin/_|/\.(?!well-known/)~', $path)) { http_response_code(403); exit('Forbidden'); }
+if (preg_match('~^/(app|content|docs|dev)(/|$)|^/admin/_|/\.(?!well-known/)~', $path)) { http_response_code(403); exit('Forbidden'); }
 if (preg_match('~\.(json|md|log|tmp)$~', $path)) { http_response_code(403); exit('Forbidden'); }
 $old = ['~^/services/?$~' => '/#capabilities', '~^/industries(/.*)?$~i' => '/#industries', '~^/contact/?$~' => '/#contact',
         '~^/(reference-build|decision-layer)/?$~' => '/#platform', '~^/why-us/?$~' => '/#principles', '~^/how-it-works/?$~' => '/#process'];

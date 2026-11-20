@@ -1,11 +1,11 @@
 # Campaign landing pages
 
-Every marketing landing page is one short PHP file in `public_html/lp/`. The file `lp/<name>.php` is served at `https://figuredoutai.com/lp/<name>`. It reuses the same hero (live inbox plus the 3D mark), product sections and waitlist form as the homepage, so it stays on brand automatically. Sign-ups record the page and UTM tags, and you can see them in Admin → Waitlist.
+Every marketing landing page is one short PHP file in `lp/`. The file `lp/<name>.php` is served at `https://figuredoutai.com/lp/<name>`. It reuses the same hero (live inbox plus the 3D mark), product sections and waitlist form as the homepage, so it stays on brand automatically. Sign-ups record the page and UTM tags, and you can see them in Admin → Waitlist.
 
 ## New page in 3 steps
-1. Copy the template below into `public_html/lp/<name>.php`. Use lowercase letters, digits and dashes for the name, for example `lp/salons.php`.
+1. Copy the template below into `lp/<name>.php` on a new branch. Use lowercase letters, digits and dashes for the name, for example `lp/salons.php`.
 2. Change the kicker, title, lead, FAQ and join copy. Keep the title short: one line plus a second, softer line inside `<span class="soft">`.
-3. Upload that one file to `public_html/lp/` in Hostinger. A single new file is safe; only folder zips get renamed on extract. Link to it with UTM tags, for example `/lp/salons?utm_source=meta&utm_campaign=salons-nov`.
+3. Open a pull request, merge when CI is green, then hPanel → GIT → Deploy. Link to it with UTM tags, for example `/lp/salons?utm_source=meta&utm_campaign=salons-nov`.
 
 ```php
 <?php

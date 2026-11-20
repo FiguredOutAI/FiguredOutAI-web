@@ -19,7 +19,7 @@ RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
 RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301,NE]
 
 # Private folders and files
-RewriteRule ^(app|content)(/|$) - [F,L]
+RewriteRule ^(app|content|docs|dev)(/|$) - [F,L]
 RewriteRule ^admin/_ - [F,L]
 RewriteRule (^|/)\.(?!well-known) - [F,L]
 

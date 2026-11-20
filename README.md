@@ -2,25 +2,31 @@
 
 Source of [figuredoutai.com](https://figuredoutai.com): the FiguredOutAI AI inbox (WhatsApp, Instagram and Messenger) with its waitlist, plus the custom AI services site, blog and admin panel. Plain PHP, no build step, hosted on Hostinger.
 
+**The top level of this repo is the website.** Hostinger's GitHub deployment publishes the `main` branch straight into `public_html`. Whatever is on `main` is what's live.
+
 ## Layout
 | Path | What it is |
 | --- | --- |
-| `public_html/` | The site itself; this folder is what goes on the server |
-| `public_html/app/` | Shared PHP: layout, product sections (`product.php`), waitlist, helpers |
-| `public_html/assets/` | CSS, JS (including the three.js hero scene), fonts and images |
-| `public_html/lp/` | Campaign landing pages, served at `/lp/<name>` (see `LANDING-PAGES.md`) |
-| `public_html/admin/` | Admin panel: posts, leads, waitlist, settings |
-| `dev/router.php` | Local router that mirrors `.htaccess` for `php -S` |
+| `index.php`, `waitlist.php`, … | Public pages |
+| `app/` | Shared PHP: layout, product sections (`product.php`), waitlist, marketing, helpers (blocked from the web) |
+| `assets/` | CSS, JS (including the three.js hero scene), fonts and images |
+| `lp/` | Campaign landing pages, served at `/lp/<name>` (see `docs/LANDING-PAGES.md`) |
+| `admin/` | Admin panel: posts, leads, waitlist, settings |
+| `docs/`, `dev/` | Guides and the local dev router (blocked from the web by `.htaccess`) |
 
 ## Run locally
 ```bash
 git config core.hooksPath .githooks
-php -S localhost:8080 -t public_html dev/router.php
+php -S localhost:8080 -t . dev/router.php
 ```
 Needs PHP 8.2+ with mbstring, openssl and curl.
 
 ## Not in this repo
-`public_html/content/` and `public_html/uploads/` hold live server data (leads, waitlist sign-ups, admin login, API keys in settings). They stay on the server and are never committed. `app/config.php` holds no secrets; the signing secret is generated on the server into `content/secret.json`.
+`content/` and `uploads/` hold live server data (waitlist sign-ups, consent log, leads, admin login, API keys in settings). They exist only on the server, are listed in `.gitignore`, and are never committed. `app/config.php` holds no secrets; the signing secret is generated on the server into `content/secret.json`.
 
-## Deploy
-Push to `main`. A GitHub Action checks the build and publishes `public_html` to the `deploy` branch, which Hostinger deploys. One-time setup and the full checklist: [DEPLOY-GITHUB.md](DEPLOY-GITHUB.md).
+## Shipping a change
+1. Work on a branch and open a pull request. CI lints the PHP, blocks data and secrets, checks that private paths aren't served, and runs the waitlist sign-up flow.
+2. Merge to `main` when CI is green.
+3. hPanel → Advanced → GIT → **Deploy** (or automatically, if auto-deploy is on).
+
+Full guide and checks: [docs/DEPLOY-GITHUB.md](docs/DEPLOY-GITHUB.md).

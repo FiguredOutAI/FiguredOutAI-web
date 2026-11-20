@@ -2,7 +2,7 @@
 /**
  * Product (FiguredOutAI inbox) sections shared by the homepage, /waitlist and any
  * future campaign landing page. Each section is a function, so a new landing page
- * is a short PHP file that calls the ones it needs (see LANDING-PAGES.md).
+ * is a short PHP file that calls the ones it needs (see docs/LANDING-PAGES.md).
  */
 require_once __DIR__ . '/waitlist.php';
 

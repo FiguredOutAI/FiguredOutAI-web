@@ -1,7 +1,7 @@
 #!/bin/sh
 # Blocks commits that would publish visitor data or secrets.
 # Visitor data (waitlist, consent log, leads, admin login, settings with API keys)
-# lives in public_html/content/ and public_html/uploads/ on the server only.
+# lives in content/ and uploads/ on the server only.
 # Enabled with: git config core.hooksPath .githooks
 
 fail=0
@@ -9,13 +9,13 @@ files=$(git diff --cached --name-only --diff-filter=ACMR)
 
 for f in $files; do
   case "$f" in
-    public_html/content/*|public_html/uploads/*|*.zip|*.tgz|*.sql|*.env|.env*|backups/*)
+    content/*|uploads/*|content-backup*/*|*.zip|*.tgz|*.sql|*.env|.env*|backups/*)
       echo "BLOCKED: $f must never be committed (user data, config or archive)"; fail=1 ;;
   esac
 done
 
 # The config must never carry a real token (the secret lives in content/secret.json on the server)
-if git diff --cached -U0 -- public_html/app/config.php | grep -E "^\+.*'cron_token' *=> *'[^']+'"; then
+if git diff --cached -U0 -- app/config.php | grep -E "^\+.*'cron_token' *=> *'[^']+'"; then
   echo "BLOCKED: app/config.php must keep 'cron_token' => ''"; fail=1
 fi
 

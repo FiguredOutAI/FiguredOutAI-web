@@ -1,6 +1,8 @@
-# Server data: leads, waitlist sign-ups, admin login, settings (API keys). Never commit.
-public_html/content/
-public_html/uploads/
+# Server data: leads, waitlist sign-ups, consent log, admin login, settings (API keys).
+# Never commit. Listed here so the Hostinger deploy (which publishes this repo into
+# public_html) never touches it either.
+/content/
+/uploads/
 
 # Build packages, backups and old builds
 *.zip
@@ -23,7 +25,8 @@ Thumbs.db
 .env.*
 
 # Local copy of the daily data snapshots made by cron.php
-content-backups/
+/content-backups/
+/content-backup-*/
 
 # Security audit notes (kept off the public repo)
 AUDIT-*.md

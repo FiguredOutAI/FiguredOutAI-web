@@ -1,7 +1,8 @@
-name: Check and publish
+name: CI
 
-# Pull requests: checks only. Pushes to main: checks, then publish to `deploy`.
-# Hostinger deploys the `deploy` branch, which holds only the contents of public_html.
+# Hostinger deploys the main branch straight into public_html, so this repo's top level IS the website.
+# Every push and pull request is checked here. Work on a branch and open a pull request: merge to main
+# only when this is green, because merging is what goes live.
 # Actions are pinned to full commit SHAs (Dependabot keeps them current).
 
 on:
@@ -14,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: check-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -33,56 +34,37 @@ jobs:
           coverage: none
 
       - name: PHP syntax check
-        run: find public_html -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: git ls-files '*.php' -z | xargs -0 -n1 php -l
 
       - name: Block visitor data and secrets
         run: |
-          if git ls-files | grep -E '^public_html/(content|uploads)/|\.(zip|tgz|sql)$'; then
+          if git ls-files | grep -E '^(content|uploads|content-backup[^/]*)/|\.(zip|tgz|sql)$'; then
             echo "::error::Server data or archives are tracked in git"; exit 1
           fi
-          if grep -nE "'cron_token' *=> *'[^']+'" public_html/app/config.php; then
+          if grep -nE "'cron_token' *=> *'[^']+'" app/config.php; then
             echo "::error::app/config.php must keep 'cron_token' => ''"; exit 1
           fi
           if git grep -nE 're_[A-Za-z0-9_]{20,}|sk_(live|test)_[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|AIza[0-9A-Za-z_-]{30,}|BEGIN [A-Z ]*PRIVATE KEY' -- . ':!*.min.js'; then
             echo "::error::Secret-looking string found"; exit 1
           fi
+          if ! grep -qE '^/?content/?$' .gitignore || ! grep -qE '^/?uploads/?$' .gitignore; then
+            echo "::error::.gitignore must keep content/ and uploads/ (the deploy relies on it)"; exit 1
+          fi
 
-      - name: Smoke test pages, data protection and the waitlist
+      - name: Smoke test pages, blocked paths and the waitlist
         run: |
-          php -S 127.0.0.1:8080 -t public_html dev/router.php > /tmp/php.log 2>&1 &
+          php -S 127.0.0.1:8080 -t . dev/router.php > /tmp/php.log 2>&1 &
           sleep 2
           ok() { code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$1"); echo "$1 $code"; [ "$code" = "$2" ] || { cat /tmp/php.log; exit 1; }; }
           for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml /health.php /.well-known/security.txt /unsubscribe; do ok "$p" 200; done
-          for p in /content/settings.json /app/config.php /.git/config; do
+          for p in /content/settings.json /app/config.php /.git/config /docs/DEPLOY.md /dev/router.php /.github/workflows/ci.yml /.gitignore; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p"); echo "$p $code"
             [ "$code" != 200 ] || { echo "::error::$p is publicly readable"; exit 1; }
           done
-          # full waitlist sign-up: step 1, step 2, and a forged reference must be refused
+          # full waitlist sign-up: step 1, step 2 with the marketing opt-in, and a forged reference must be refused
           r=$(curl -s -X POST -d 'step=start&email=ci@example.com&t=1' http://127.0.0.1:8080/waitlist-api.php); echo "$r"
           ref=$(echo "$r" | php -r 'echo json_decode(stream_get_contents(STDIN), true)["ref"] ?? "";')
           curl -s -X POST --data-urlencode "ref=$ref" -d 'step=finish&name=CI&consent=1&marketing=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"eid":"wl-'
           curl -s -X POST -d 'step=finish&ref=aaaaaaaaaaaa.0000&name=x&consent=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"ok":false'
-          php -r 'foreach (json_decode(file_get_contents("public_html/content/waitlist.json"), true) as $w) if ($w["email"] === "ci@example.com" && empty($w["marketing"])) exit(1);' || { echo "::error::marketing opt-in was not stored"; exit 1; }
+          php -r 'foreach (json_decode(file_get_contents("content/waitlist.json"), true) as $w) if ($w["email"] === "ci@example.com" && empty($w["marketing"])) exit(1);' || { echo "::error::marketing opt-in was not stored"; exit 1; }
           echo "waitlist flow OK"
-
-  publish:
-    needs: check
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    concurrency:
-      group: deploy
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Publish public_html to the deploy branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git subtree split --prefix public_html -b deploy-build
-          git push origin deploy-build:deploy

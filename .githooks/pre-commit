@@ -1,0 +1,27 @@
+#!/bin/sh
+# Blocks commits that would publish visitor data or secrets.
+# Visitor data (waitlist, consent log, leads, admin login, settings with API keys)
+# lives in public_html/content/ and public_html/uploads/ on the server only.
+# Enabled with: git config core.hooksPath .githooks
+
+fail=0
+files=$(git diff --cached --name-only --diff-filter=ACMR)
+
+for f in $files; do
+  case "$f" in
+    public_html/content/*|public_html/uploads/*|public_html/app/config.php|*.zip|*.tgz|*.sql|*.env|.env*|backups/*)
+      echo "BLOCKED: $f must never be committed (user data, config or archive)"; fail=1 ;;
+  esac
+done
+
+# Secret-looking strings in the staged changes (Resend, Stripe/OpenAI, GitHub, Google, private keys)
+if git diff --cached -U0 --diff-filter=ACMR -- . ':(exclude)*.min.js' | grep -E '^\+' |
+   grep -nE 're_[A-Za-z0-9_]{20,}|sk_(live|test)?_?[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----' ; then
+  echo "BLOCKED: the lines above look like an API key or private key."; fail=1
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "Commit stopped. Unstage those files (git restore --staged <file>) and try again."
+  exit 1
+fi
+exit 0

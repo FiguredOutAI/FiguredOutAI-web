@@ -19,3 +19,8 @@ OVERNIGHT-TASKS.md
 node_modules/
 .DS_Store
 Thumbs.db
+
+# Visitor data must never be committed, even by name
+*.sql
+.env
+.env.*

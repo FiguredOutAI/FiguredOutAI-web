@@ -46,10 +46,11 @@ function md_to_html(string $md, ?array &$toc = null): string {
             $flushAll();
             $lvl = max(2, strlen($m[1]));
             $text = md_inline($m[2]);
-            $id = slugify(strip_tags($text)); $base = $id; $k = 2;
+            $plain = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8'); // the TOC escapes it again on output
+            $id = slugify($plain); $base = $id; $k = 2;
             while (isset($ids[$id])) $id = $base . '-' . $k++;
             $ids[$id] = 1;
-            if ($lvl <= 3) $toc[] = ['level' => $lvl, 'id' => $id, 'text' => strip_tags($text)];
+            if ($lvl <= 3) $toc[] = ['level' => $lvl, 'id' => $id, 'text' => $plain];
             $out[] = "<h$lvl id=\"$id\">$text</h$lvl>";
             continue;
         }

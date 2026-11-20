@@ -2,9 +2,6 @@
 public_html/content/
 public_html/uploads/
 
-# Real config holds the cron token. Copy app/config.example.php to app/config.php instead.
-public_html/app/config.php
-
 # Build packages, backups and old builds
 *.zip
 *.tgz
@@ -24,3 +21,9 @@ Thumbs.db
 *.sql
 .env
 .env.*
+
+# Local copy of the daily data snapshots made by cron.php
+content-backups/
+
+# Security audit notes (kept off the public repo)
+AUDIT-*.md

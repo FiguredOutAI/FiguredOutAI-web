@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/app/lib.php';
+require __DIR__ . '/app/waitlist.php'; // send_mail(): Resend when a key is saved, PHP mail() otherwise
 
 $wantsJson = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
 function reply(bool $ok, string $msg, bool $json): void {
@@ -35,9 +36,7 @@ array_unshift($leads, $lead);
 json_write(CONTENT . '/leads.json', $leads);
 
 $clean = fn($s) => str_replace(["\r", "\n"], ' ', $s);
-$subject = '=?UTF-8?B?' . base64_encode('New enquiry: ' . $clean($interest) . ' · ' . $clean($name)) . '?=';
 $body = "Name: $name\nEmail: $email\nCompany: $company\nInterest: $interest\n\n$message\n\n— Sent from " . cfg('base_url');
-$headers = "From: FiguredOutAI Website <" . cfg('mail_from') . ">\r\nReply-To: " . $clean($email) . "\r\nContent-Type: text/plain; charset=UTF-8\r\n";
-@mail(cfg('contact_email'), $subject, $body, $headers);
+send_mail(cfg('contact_email'), 'New enquiry: ' . $clean($interest) . ' · ' . $clean($name), nl2br(e($body)), $body, $email);
 
 reply(true, '', $wantsJson);

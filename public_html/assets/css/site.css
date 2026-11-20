@@ -794,3 +794,6 @@ section{padding:96px 0}
 @media (prefers-reduced-motion:reduce){
   .reveal,.js .enter{opacity:1;transform:none;filter:none}
 }
+
+/* phones and reduced motion: no animated grain overlay (full-screen repaint) */
+@media (max-width:820px),(prefers-reduced-motion:reduce){body::after{display:none}}

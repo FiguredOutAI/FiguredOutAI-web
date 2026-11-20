@@ -1,0 +1,66 @@
+name: Check and publish
+
+# Every push to main is checked, and only a passing build is published to the
+# `deploy` branch. Hostinger deploys the `deploy` branch into public_html.
+# The `deploy` branch holds only the contents of public_html (no docs, no tooling).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  check-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: PHP syntax check
+        run: find public_html -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Block visitor data and secrets
+        run: |
+          if git ls-files | grep -E '^public_html/(content|uploads)/|\.(zip|tgz|sql)$'; then
+            echo "::error::Server data or archives are tracked in git"; exit 1
+          fi
+          if grep -nE "'cron_token' *=> *'[^']+'" public_html/app/config.php; then
+            echo "::error::app/config.php must keep 'cron_token' => ''"; exit 1
+          fi
+          if git grep -nE 're_[A-Za-z0-9_]{20,}|sk_(live|test)_[A-Za-z0-9]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|AIza[0-9A-Za-z_-]{30,}|BEGIN [A-Z ]*PRIVATE KEY' -- . ':!*.min.js'; then
+            echo "::error::Secret-looking string found"; exit 1
+          fi
+
+      - name: Smoke test the main pages
+        run: |
+          php -S 127.0.0.1:8080 -t public_html dev/router.php > /tmp/php.log 2>&1 &
+          sleep 2
+          for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p")
+            echo "$p $code"
+            if [ "$code" != 200 ]; then cat /tmp/php.log; exit 1; fi
+          done
+          for p in /content/settings.json /app/config.php; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p")
+            echo "$p $code"
+            if [ "$code" = 200 ]; then echo "::error::$p is publicly readable"; exit 1; fi
+          done
+
+      - name: Publish public_html to the deploy branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git subtree split --prefix public_html -b deploy-build
+          git push origin deploy-build:deploy

@@ -19,7 +19,7 @@ foreach ($posts as $p) {
     $img = $p['cover'] ? (str_starts_with($p['cover'], '/') ? url($p['cover']) : $p['cover']) : null;
     $u(post_url($p), $p['updated'] ? strtotime($p['updated']) : $p['ts'], 'monthly', '0.8', $img);
 }
-foreach (all_tags() as $slug => $t) $u(url("blog/tag/$slug/"), $latest, 'weekly', '0.5');
+foreach (all_tags() as $slug => $t) if ((int)$t['count'] >= 3) $u(url("blog/tag/$slug/"), $latest, 'weekly', '0.5');
 $u(url('privacy'), filemtime(__DIR__ . '/privacy.php'), 'yearly', '0.2');
 $u(url('terms'), filemtime(__DIR__ . '/terms.php'), 'yearly', '0.2');
 echo "</urlset>\n";

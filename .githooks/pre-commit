@@ -9,10 +9,15 @@ files=$(git diff --cached --name-only --diff-filter=ACMR)
 
 for f in $files; do
   case "$f" in
-    public_html/content/*|public_html/uploads/*|public_html/app/config.php|*.zip|*.tgz|*.sql|*.env|.env*|backups/*)
+    public_html/content/*|public_html/uploads/*|*.zip|*.tgz|*.sql|*.env|.env*|backups/*)
       echo "BLOCKED: $f must never be committed (user data, config or archive)"; fail=1 ;;
   esac
 done
+
+# The config must never carry a real token (the secret lives in content/secret.json on the server)
+if git diff --cached -U0 -- public_html/app/config.php | grep -E "^\+.*'cron_token' *=> *'[^']+'"; then
+  echo "BLOCKED: app/config.php must keep 'cron_token' => ''"; fail=1
+fi
 
 # Secret-looking strings in the staged changes (Resend, Stripe/OpenAI, GitHub, Google, private keys)
 if git diff --cached -U0 --diff-filter=ACMR -- . ':(exclude)*.min.js' | grep -E '^\+' |

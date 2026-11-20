@@ -11,6 +11,15 @@ if (!is_array($d) || !preg_match('~^[A-Za-z0-9-]{8,64}$~', (string)($d['id'] ?? 
 $method = preg_match('~^[a-z_]{3,30}$~', (string)($d['method'] ?? '')) ? $d['method'] : 'unknown';
 $row = ['at' => date('c'), 'id' => $d['id'], 'analytics' => !empty($d['a']), 'marketing' => !empty($d['m']), 'v' => (int)($d['v'] ?? 0), 'method' => $method];
 
+// Flood guard: 30 records per address per hour, and stop archiving after 40 full logs (about 200 MB).
+$rlFile = CONTENT . '/consent_rate.json';
+$rl = json_read($rlFile, []);
+$k = hash('sha256', client_ip());
+foreach ($rl as $kk => $times) { $rl[$kk] = array_values(array_filter($times, fn($x) => $x > time() - 3600)); if (!$rl[$kk]) unset($rl[$kk]); }
+if (count($rl[$k] ?? []) >= 30 || count(glob(CONTENT . '/consent_log-*.jsonl') ?: []) >= 40) { http_response_code(204); exit; }
+$rl[$k][] = time();
+json_write($rlFile, $rl);
+
 $file = CONTENT . '/consent_log.jsonl';
 if (is_file($file) && filesize($file) > 5 * 1024 * 1024) rename($file, CONTENT . '/consent_log-' . date('Ymd-His') . '.jsonl');
 file_put_contents($file, json_encode($row, JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);

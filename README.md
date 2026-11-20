@@ -14,12 +14,13 @@ Source of [figuredoutai.com](https://figuredoutai.com): the FiguredOutAI AI inbo
 
 ## Run locally
 ```bash
-cp public_html/app/config.example.php public_html/app/config.php
+git config core.hooksPath .githooks
 php -S localhost:8080 -t public_html dev/router.php
 ```
+Needs PHP 8.2+ with mbstring, openssl and curl.
 
 ## Not in this repo
-`public_html/content/` and `public_html/uploads/` hold live server data (leads, waitlist sign-ups, admin login, API keys in settings). They stay on the server and are never committed. `app/config.php` is also local only.
+`public_html/content/` and `public_html/uploads/` hold live server data (leads, waitlist sign-ups, admin login, API keys in settings). They stay on the server and are never committed. `app/config.php` holds no secrets; the signing secret is generated on the server into `content/secret.json`.
 
 ## Deploy
-Hostinger's File Manager renames folders instead of merging them on extract. To deploy, delete the code files on the server (keep `content` and `uploads`), then upload a zip of `public_html` without those two folders and extract it. Details are in `DEPLOY.md` and `WAITLIST-LAUNCH.md`.
+Push to `main`. A GitHub Action checks the build and publishes `public_html` to the `deploy` branch, which Hostinger deploys. One-time setup and the full checklist: [DEPLOY-GITHUB.md](DEPLOY-GITHUB.md).

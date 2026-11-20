@@ -10,6 +10,7 @@ Disallow: /contact.php
 Disallow: /waitlist-api.php
 Disallow: /consent.php
 Disallow: /cron.php
+Disallow: /health.php
 
 User-agent: Googlebot
 User-agent: Bingbot
@@ -35,5 +36,6 @@ Disallow: /contact.php
 Disallow: /waitlist-api.php
 Disallow: /consent.php
 Disallow: /cron.php
+Disallow: /health.php
 
 Sitemap: https://figuredoutai.com/sitemap.xml

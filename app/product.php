@@ -58,7 +58,7 @@ function waitlist_form(string $id, bool $counter = true): string {
     <div class="wl-grid">
       <div><label for="<?= e($id) ?>-name">Name</label><input id="<?= e($id) ?>-name" name="name" required autocomplete="name" placeholder="What should we call you?"></div>
       <div><label for="<?= e($id) ?>-co">Business <em>optional</em></label><input id="<?= e($id) ?>-co" name="company" autocomplete="organization" placeholder="Your brand"></div>
-      <div class="full"><label for="<?= e($id) ?>-ph">WhatsApp number <em>optional</em></label><input id="<?= e($id) ?>-ph" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+91 98765 43210"></div>
+      <div class="full"><label for="<?= e($id) ?>-ph">WhatsApp number <em>optional</em></label><input id="<?= e($id) ?>-ph" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="With country code, e.g. +44 7700 900123"></div>
       <fieldset class="full"><legend>Where do customers message you?</legend>
         <div class="wl-chips"><?php foreach (WAITLIST_CHANNELS as $k => $v): ?><label><input type="checkbox" name="channels[]" value="<?= $k ?>"><span><?= channel_icon($k) ?><?= e($v) ?></span></label><?php endforeach; ?></div>
       </fieldset>

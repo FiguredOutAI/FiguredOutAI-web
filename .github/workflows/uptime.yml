@@ -1,0 +1,60 @@
+name: Uptime
+
+# Checks the live site every 15 minutes. On failure it opens (or updates) one GitHub issue labelled
+# "outage", which emails repo watchers; when the site recovers it closes the issue.
+# Waitlist checks switch on once the repository variable SITE_V4 is set to "true" (after the v4 deploy).
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE: https://figuredoutai.com
+      UA: "Mozilla/5.0 (compatible; FiguredOutAI-Uptime/1.0; +https://github.com/FiguredOutAI/FiguredOutAI-web)"
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Probe
+        id: probe
+        run: |
+          fail=""
+          check() { code=$(curl -s -o /dev/null -m 20 --retry 2 --retry-delay 5 -A "$UA" -w '%{http_code}' "$SITE$1"); echo "$1 -> $code (want $2)"; [ "$code" = "$2" ] || fail="$fail\n- \`$1\` returned $code, expected $2"; }
+          check / 200
+          check /about 200
+          check /sitemap.xml 200
+          check /content/settings.json 403
+          check /app/config.php 403
+          if [ "${{ vars.SITE_V4 }}" = "true" ]; then
+            check /waitlist 200
+            check /health.php 200
+          fi
+          echo "fail<<EOF" >> "$GITHUB_OUTPUT"; printf "%b\n" "$fail" >> "$GITHUB_OUTPUT"; echo "EOF" >> "$GITHUB_OUTPUT"
+          [ -z "$fail" ]
+
+      - name: Open or update the outage issue
+        if: failure()
+        run: |
+          gh label create outage --color B60205 --description "Live site check failed" 2>/dev/null || true
+          body=$(printf "Uptime check failed at %s UTC:\n%s\n\nRun: %s" "$(date -u +'%Y-%m-%d %H:%M')" "${{ steps.probe.outputs.fail }}" "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}")
+          n=$(gh issue list --label outage --state open --json number --jq '.[0].number')
+          if [ -n "$n" ]; then gh issue comment "$n" --body "$body"; else gh issue create --title "figuredoutai.com is failing checks" --label outage --body "$body"; fi
+
+      - name: Close the outage issue on recovery
+        if: success()
+        run: |
+          for n in $(gh issue list --label outage --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Recovered at $(date -u +'%Y-%m-%d %H:%M') UTC."
+          done

@@ -265,6 +265,7 @@ function head_tags(array $m): string {
     if (!empty($m['noindex'])) $o .= "<meta name=\"robots\" content=\"noindex,follow\">\n";
     else $o .= "<meta name=\"robots\" content=\"index,follow,max-image-preview:large\">\n";
     $o .= '<meta property="og:site_name" content="' . e(cfg('site_name')) . "\">\n";
+    $o .= "<meta property=\"og:locale\" content=\"en_US\">\n";
     $o .= '<meta property="og:type" content="' . e($m['type'] ?? 'website') . "\">\n";
     $o .= '<meta property="og:title" content="' . e($title) . "\">\n";
     $o .= '<meta property="og:description" content="' . e($desc) . "\">\n";

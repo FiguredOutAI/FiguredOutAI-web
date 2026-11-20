@@ -10,7 +10,7 @@ $go = function (string $file, array $get = []) use ($root) {
     require "$root/$file";
     return true;
 };
-if (preg_match('~^/(app|content)(/|$)|^/admin/_|/\.~', $path)) { http_response_code(403); exit('Forbidden'); }
+if (preg_match('~^/(app|content)(/|$)|^/admin/_|/\.(?!well-known/)~', $path)) { http_response_code(403); exit('Forbidden'); }
 if (preg_match('~\.(json|md|log|tmp)$~', $path)) { http_response_code(403); exit('Forbidden'); }
 $old = ['~^/services/?$~' => '/#capabilities', '~^/industries(/.*)?$~i' => '/#industries', '~^/contact/?$~' => '/#contact',
         '~^/(reference-build|decision-layer)/?$~' => '/#platform', '~^/why-us/?$~' => '/#principles', '~^/how-it-works/?$~' => '/#process'];

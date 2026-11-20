@@ -1,32 +1,36 @@
 name: Check and publish
 
-# Every push to main is checked, and only a passing build is published to the
-# `deploy` branch. Hostinger deploys the `deploy` branch into public_html.
-# The `deploy` branch holds only the contents of public_html (no docs, no tooling).
+# Pull requests: checks only. Pushes to main: checks, then publish to `deploy`.
+# Hostinger deploys the `deploy` branch, which holds only the contents of public_html.
+# Actions are pinned to full commit SHAs (Dependabot keeps them current).
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: deploy
-  cancel-in-progress: false
+  group: check-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  check-and-publish:
+  check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.2'
+          extensions: mbstring, curl, openssl
+          coverage: none
 
       - name: PHP syntax check
         run: find public_html -name '*.php' -print0 | xargs -0 -n1 php -l
@@ -43,20 +47,37 @@ jobs:
             echo "::error::Secret-looking string found"; exit 1
           fi
 
-      - name: Smoke test the main pages
+      - name: Smoke test pages, data protection and the waitlist
         run: |
           php -S 127.0.0.1:8080 -t public_html dev/router.php > /tmp/php.log 2>&1 &
           sleep 2
-          for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p")
-            echo "$p $code"
-            if [ "$code" != 200 ]; then cat /tmp/php.log; exit 1; fi
+          ok() { code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$1"); echo "$1 $code"; [ "$code" = "$2" ] || { cat /tmp/php.log; exit 1; }; }
+          for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml /health.php /.well-known/security.txt; do ok "$p" 200; done
+          for p in /content/settings.json /app/config.php /.git/config; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p"); echo "$p $code"
+            [ "$code" != 200 ] || { echo "::error::$p is publicly readable"; exit 1; }
           done
-          for p in /content/settings.json /app/config.php; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p")
-            echo "$p $code"
-            if [ "$code" = 200 ]; then echo "::error::$p is publicly readable"; exit 1; fi
-          done
+          # full waitlist sign-up: step 1, step 2, and a forged reference must be refused
+          r=$(curl -s -X POST -d 'step=start&email=ci@example.com&t=1' http://127.0.0.1:8080/waitlist-api.php); echo "$r"
+          ref=$(echo "$r" | php -r 'echo json_decode(stream_get_contents(STDIN), true)["ref"] ?? "";')
+          curl -s -X POST --data-urlencode "ref=$ref" -d 'step=finish&name=CI&consent=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"stage":"joined"'
+          curl -s -X POST -d 'step=finish&ref=aaaaaaaaaaaa.0000&name=x&consent=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"ok":false'
+          echo "waitlist flow OK"
+
+  publish:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Publish public_html to the deploy branch
         run: |

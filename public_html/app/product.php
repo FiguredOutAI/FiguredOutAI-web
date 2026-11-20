@@ -63,6 +63,7 @@ function waitlist_form(string $id, bool $counter = true): string {
         <div class="wl-chips"><?php foreach (WAITLIST_CHANNELS as $k => $v): ?><label><input type="checkbox" name="channels[]" value="<?= $k ?>"><span><?= channel_icon($k) ?><?= e($v) ?></span></label><?php endforeach; ?></div>
       </fieldset>
       <label class="wl-consent full"><input type="checkbox" name="consent" value="1" required><span>Keep me posted about my access and launch updates by email or WhatsApp. Unsubscribe anytime. <a href="/privacy#waitlist">Privacy</a></span></label>
+      <label class="wl-consent full"><input type="checkbox" name="marketing" value="1"><span>Also send me product news, tips and offers <em>(optional)</em>, and let FiguredOutAI use my email to show me relevant ads. <a href="/privacy#marketing">How</a></span></label>
     </div>
     <div class="wl-send"><button class="btn btn-p" type="submit">Lock my spot <span class="arr">→</span></button><small class="wl-msg" role="status"></small></div>
   </form>

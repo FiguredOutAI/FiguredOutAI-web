@@ -52,7 +52,7 @@ jobs:
           php -S 127.0.0.1:8080 -t public_html dev/router.php > /tmp/php.log 2>&1 &
           sleep 2
           ok() { code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$1"); echo "$1 $code"; [ "$code" = "$2" ] || { cat /tmp/php.log; exit 1; }; }
-          for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml /health.php /.well-known/security.txt; do ok "$p" 200; done
+          for p in / /waitlist /about /blog/ /privacy /terms /sitemap.xml /robots.txt /feed.xml /health.php /.well-known/security.txt /unsubscribe; do ok "$p" 200; done
           for p in /content/settings.json /app/config.php /.git/config; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:8080$p"); echo "$p $code"
             [ "$code" != 200 ] || { echo "::error::$p is publicly readable"; exit 1; }
@@ -60,8 +60,9 @@ jobs:
           # full waitlist sign-up: step 1, step 2, and a forged reference must be refused
           r=$(curl -s -X POST -d 'step=start&email=ci@example.com&t=1' http://127.0.0.1:8080/waitlist-api.php); echo "$r"
           ref=$(echo "$r" | php -r 'echo json_decode(stream_get_contents(STDIN), true)["ref"] ?? "";')
-          curl -s -X POST --data-urlencode "ref=$ref" -d 'step=finish&name=CI&consent=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"stage":"joined"'
+          curl -s -X POST --data-urlencode "ref=$ref" -d 'step=finish&name=CI&consent=1&marketing=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"eid":"wl-'
           curl -s -X POST -d 'step=finish&ref=aaaaaaaaaaaa.0000&name=x&consent=1' http://127.0.0.1:8080/waitlist-api.php | grep -q '"ok":false'
+          php -r 'foreach (json_decode(file_get_contents("public_html/content/waitlist.json"), true) as $w) if ($w["email"] === "ci@example.com" && empty($w["marketing"])) exit(1);' || { echo "::error::marketing opt-in was not stored"; exit 1; }
           echo "waitlist flow OK"
 
   publish:

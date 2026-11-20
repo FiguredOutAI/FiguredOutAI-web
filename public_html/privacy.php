@@ -37,7 +37,16 @@ if (isset($ids['li'])) { $cookies[] = ['li_sugr, bcookie, lidc, UserMatchHistory
 
       <h2 id="waitlist">Waitlist</h2>
       <p>When you join the FiguredOutAI waitlist we collect your email address, your name, and, if you choose to add them, your business name, WhatsApp number and the messaging channels you use. If you sign up with Google, Google shares your name, email address and profile picture with us; we never see your Google password. We also record how you found us (campaign tags, the page you landed on and the referring site) and the time you gave consent.</p>
-      <p>We use this to tell you about your access, onboard you, send launch updates by email or WhatsApp, and understand which channels to support first. The basis is <em>your consent</em>, which you give by ticking the box on the form. You can withdraw it at any time by replying "unsubscribe" to any email or writing to <a href="mailto:<?= $mail ?>"><?= $mail ?></a>, and we will delete your waitlist record. We keep waitlist records until launch onboarding is done, or until you ask us to delete them. Welcome and update emails are sent through our email provider, Resend.</p>
+      <p>We use this to tell you about your access, onboard you, send launch updates by email or WhatsApp, and understand which channels to support first. The basis is <em>your consent</em>, which you give by ticking the box on the form. You can withdraw it at any time by replying "unsubscribe" to any email or writing to <a href="mailto:<?= $mail ?>"><?= $mail ?></a>, and we will delete your waitlist record. We keep waitlist records until launch onboarding is done, or until you ask us to delete them. Welcome and update emails are sent through our email provider, Resend. Every email has a one-click unsubscribe link. If you only give an email address and don't finish signing up, we delete it after 30 days.</p>
+
+      <h2 id="marketing">Marketing emails and ads (optional)</h2>
+      <p>The waitlist form has a second, optional box that is never ticked for you. If you tick it, we also send you product news, tips and offers, and we may use your email address, phone number and first name to show you relevant ads and to measure them. To do that we:</p>
+      <ul>
+        <li>keep your details in our email provider, Resend, in a "marketing" list;</li>
+        <li>send Meta (Facebook, Instagram) a sign-up event through its Conversions API, with your email, phone and first name scrambled into a one-way code (SHA-256 hash) on our server first, plus your IP address, browser and Meta cookie identifiers if you allowed marketing cookies;</li>
+        <li>may upload the same scrambled details to Meta Custom Audiences or Google Customer Match, to show you ads or to leave you out of ads for the waitlist you already joined.</li>
+      </ul>
+      <p>The basis is your consent. Withdraw it any time with the unsubscribe link in any email, by replying "unsubscribe", or by writing to <a href="mailto:<?= $mail ?>"><?= $mail ?></a>. We then stop all marketing and stop sharing your details with ad platforms. If you don't tick the box, none of this happens, and you still get your access updates.</p>
 
       <h2 id="cookies">Cookies</h2>
       <p>Cookies are small files stored by your browser. We sort them into three groups:</p>

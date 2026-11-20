@@ -17,7 +17,7 @@ $old = ['~^/services/?$~' => '/#capabilities', '~^/industries(/.*)?$~i' => '/#in
 foreach ($old as $re => $to) if (preg_match($re, $path)) { header('Location: ' . $to, true, 301); exit; }
 if ($path === '/sitemap.xml') return $go('sitemap.php');
 if (preg_match('~^/(blog/)?feed\.xml$~', $path)) return $go('feed.php');
-if (preg_match('~^/(privacy|terms|about|waitlist)/?$~', $path, $m)) return $go($m[1] . '.php');
+if (preg_match('~^/(privacy|terms|about|waitlist|unsubscribe)/?$~', $path, $m)) return $go($m[1] . '.php');
 if (preg_match('~^/lp/([a-z0-9-]+)/?$~', $path, $m) && is_file("$root/lp/{$m[1]}.php")) return $go("lp/{$m[1]}.php");
 if ($path === '/blog') { header('Location: /blog/', true, 301); exit; }
 if (preg_match('~^/blog/page/(\d+)/?$~', $path, $m)) return $go('blog/index.php', ['page' => $m[1]]);

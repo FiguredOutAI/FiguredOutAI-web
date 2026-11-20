@@ -29,6 +29,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($_POST['resend_clear'])) $s['resend_api_key'] = '';
         elseif ($rk !== '') $s['resend_api_key'] = preg_match('~^re_[A-Za-z0-9_]{10,80}$~', $rk) ? $rk : ($s['resend_api_key'] ?? '');
         $s['wl_from_name'] = trim(mb_substr(str_replace(['"', "\r", "\n", '<', '>'], '', (string)($_POST['wl_from_name'] ?? '')), 0, 60));
+        // Marketing list (Resend Contacts + segments) and Meta Conversions API
+        $ck = trim((string)($_POST['resend_contacts_key'] ?? ''));
+        if (!empty($_POST['resend_contacts_clear'])) $s['resend_contacts_key'] = '';
+        elseif ($ck !== '' && preg_match('~^re_[A-Za-z0-9_]{10,80}$~', $ck)) $s['resend_contacts_key'] = $ck;
+        $s['resend_sync'] = !empty($_POST['resend_sync']);
+        foreach (['resend_segment_all', 'resend_segment_marketing'] as $sk) { $v = strtolower(trim((string)($_POST[$sk] ?? ''))); $s[$sk] = preg_match('~^[a-f0-9-]{36}$~', $v) ? $v : ''; }
+        $mt = trim((string)($_POST['meta_capi_token'] ?? ''));
+        if (!empty($_POST['meta_capi_clear'])) $s['meta_capi_token'] = '';
+        elseif ($mt !== '' && preg_match('~^[A-Za-z0-9]{40,400}$~', $mt)) $s['meta_capi_token'] = $mt;
+        $tc = trim((string)($_POST['meta_test_code'] ?? ''));
+        $s['meta_test_code'] = preg_match('~^TEST[A-Za-z0-9]{1,20}$~', $tc) ? $tc : '';
         $fe = trim((string)($_POST['wl_from_email'] ?? ''));
         $s['wl_from_email'] = filter_var($fe, FILTER_VALIDATE_EMAIL) && str_ends_with(strtolower($fe), '@figuredoutai.com') ? strtolower($fe) : '';
         save_settings($s);
@@ -120,6 +131,19 @@ $soc = company_links(); // saved values, falling back to the built-in defaults
   <?php if ($rkey): ?><label class="small"><input type="checkbox" name="resend_clear" value="1" style="width:auto"> Remove the saved key</label><?php endif; ?>
   <label>Sender name<input name="wl_from_name" value="<?= e($s['wl_from_name'] ?? '') ?>" placeholder="Tanishk from FiguredOutAI"></label>
   <label>Sender address <small>(must be @figuredoutai.com)</small><input name="wl_from_email" value="<?= e($s['wl_from_email'] ?? '') ?>" placeholder="<?= e(cfg('mail_from')) ?>"></label>
+  <?php $ckey = (string)($s['resend_contacts_key'] ?? ''); $mtok = (string)($s['meta_capi_token'] ?? ''); ?>
+  <h3 class="mt">Marketing list (Resend)</h3>
+  <p class="a-muted small">Every completed sign-up is copied to Resend → Contacts. Send campaigns from Resend → Broadcasts: promotions to the <b>Marketing</b> segment only (people who ticked the optional box), launch and access news to <b>All waitlist</b>. Resend adds its own unsubscribe link to every Broadcast.</p>
+  <label class="small"><input type="checkbox" name="resend_sync" value="1" style="width:auto" <?= !empty($s['resend_sync']) ? 'checked' : '' ?>> Copy sign-ups to Resend Contacts</label>
+  <label>Resend full-access key for contacts <small><?= $ckey ? '(saved: re_…' . e(substr($ckey, -4)) . ')' : '(the send-only key above cannot manage contacts)' ?></small><input type="password" name="resend_contacts_key" value="" placeholder="re_…" autocomplete="off"></label>
+  <?php if ($ckey): ?><label class="small"><input type="checkbox" name="resend_contacts_clear" value="1" style="width:auto"> Remove the saved contacts key</label><?php endif; ?>
+  <label>Segment ID: All waitlist <small>(Resend → Contacts → Segments)</small><input name="resend_segment_all" value="<?= e($s['resend_segment_all'] ?? '') ?>" placeholder="78261eea-8f8b-4381-83c6-79fa7120f1cf" spellcheck="false"></label>
+  <label>Segment ID: Marketing opt-in<input name="resend_segment_marketing" value="<?= e($s['resend_segment_marketing'] ?? '') ?>" placeholder="78261eea-8f8b-4381-83c6-79fa7120f1cf" spellcheck="false"></label>
+  <h3 class="mt">Meta Conversions API</h3>
+  <p class="a-muted small">Sends a server-side "CompleteRegistration" to the Meta Pixel set in Tracking above, only for sign-ups who ticked the marketing box. Email, phone and first name are SHA-256 hashed before they leave this server. Pairs with the browser pixel (same event ID), so each sign-up counts once.</p>
+  <label>Conversions API access token <small><?= $mtok ? '(saved: …' . e(substr($mtok, -4)) . ')' : '(Events Manager → your pixel → Settings → Generate access token)' ?></small><input type="password" name="meta_capi_token" value="" autocomplete="off"></label>
+  <?php if ($mtok): ?><label class="small"><input type="checkbox" name="meta_capi_clear" value="1" style="width:auto"> Remove the saved token</label><?php endif; ?>
+  <label>Test event code <small>(optional, e.g. TEST12345; clear it after testing)</small><input name="meta_test_code" value="<?= e($s['meta_test_code'] ?? '') ?>" placeholder="TEST12345"></label>
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="a-btn p" name="action" value="waitlist">Save waitlist settings</button><button class="a-btn" name="action" value="test_email">Save &amp; send me a test email</button></div>
 </form>
 <form method="post" class="a-card"><?= csrf_field() ?>

@@ -1,18 +1,32 @@
 <?php
 require __DIR__ . '/_inc.php';
 require dirname(__DIR__) . '/app/waitlist.php';
+require dirname(__DIR__) . '/app/marketing.php';
 require_admin();
 $all = waitlist_all();
 $statuses = ['waiting' => 'Waiting', 'invited' => 'Invited', 'onboarded' => 'Onboarded', 'removed' => 'Removed'];
 $src = fn($w) => ($w['utm']['source'] ?? '') ?: (($r = parse_url((string)($w['referrer'] ?? ''), PHP_URL_HOST)) ? preg_replace('~^www\.~', '', $r) : 'direct');
 
+// Ad audience: only people who ticked the marketing box and never unsubscribed.
+// Columns follow Meta Custom Audience and Google Customer Match upload formats (they hash on upload).
+if (($_GET['export'] ?? '') === 'audience') {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="figuredoutai-ad-audience-' . date('Y-m-d') . '.csv"');
+    $o = fopen('php://output', 'w');
+    fputcsv($o, ['email', 'phone', 'fn']);
+    foreach ($all as $w) {
+        if (($w['stage'] ?? '') !== 'joined' || empty($w['marketing']) || !empty($w['unsubscribed'])) continue;
+        fputcsv($o, [strtolower($w['email']), preg_replace('~[^\d+]~', '', (string)$w['phone']), strtolower(trim(explode(' ', (string)$w['name'])[0]))]);
+    }
+    exit;
+}
 if (($_GET['export'] ?? '') === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="figuredoutai-waitlist-' . date('Y-m-d') . '.csv"');
     $o = fopen('php://output', 'w');
-    fputcsv($o, ['Signed up', 'Stage', 'Status', 'Name', 'Email', 'Phone', 'Business', 'Channels', 'Via', 'Consent', 'UTM source', 'UTM medium', 'UTM campaign', 'UTM content', 'Landing page', 'Referrer', 'Welcome email']);
+    fputcsv($o, ['Signed up', 'Stage', 'Status', 'Name', 'Email', 'Phone', 'Business', 'Channels', 'Via', 'Consent', 'Marketing opt-in', 'Unsubscribed', 'UTM source', 'UTM medium', 'UTM campaign', 'UTM content', 'Landing page', 'Referrer', 'Welcome email']);
     $safe = fn($v) => preg_match('~^[=+\-@\t\r]~', (string)$v) ? "'" . $v : $v;
-    foreach ($all as $w) fputcsv($o, array_map($safe, [$w['joined_at'] ?: $w['at'], $w['stage'], $w['status'], $w['name'], $w['email'], $w['phone'], $w['company'], implode(' ', $w['channels'] ?? []), $w['method'], $w['consent'] ? 'yes' : 'no',
+    foreach ($all as $w) fputcsv($o, array_map($safe, [$w['joined_at'] ?: $w['at'], $w['stage'], $w['status'], $w['name'], $w['email'], $w['phone'], $w['company'], implode(' ', $w['channels'] ?? []), $w['method'], $w['consent'] ? 'yes' : 'no', !empty($w['marketing']) ? 'yes' : 'no', !empty($w['unsubscribed']) ? 'yes' : 'no',
         $w['utm']['source'] ?? '', $w['utm']['medium'] ?? '', $w['utm']['campaign'] ?? '', $w['utm']['content'] ?? '', $w['landing'] ?? '', $w['referrer'] ?? '', $w['welcome_sent'] ? 'sent' : 'not sent']));
     exit;
 }
@@ -23,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $all = waitlist_all();
     foreach ($all as $i => $w) {
         if ($w['id'] !== $id) continue;
-        if (($_POST['action'] ?? '') === 'delete') { array_splice($all, $i, 1); flash('Removed from the waitlist.'); }
+        if (($_POST['action'] ?? '') === 'delete') { resend_delete_contact($w['email']); array_splice($all, $i, 1); flash('Removed from the waitlist and from Resend contacts.'); }
         elseif (isset($statuses[$_POST['status'] ?? ''])) { $all[$i]['status'] = $_POST['status']; flash('Updated.'); }
         break;
     }
@@ -45,7 +59,7 @@ $list = $show === 'partial' ? $partial : $joined;
 
 admin_open('Waitlist', 'waitlist.php');
 ?>
-<div class="a-head"><h1>Waitlist</h1><?php if ($all): ?><a class="a-btn" href="?export=csv">Export CSV</a><?php endif; ?></div>
+<div class="a-head"><h1>Waitlist</h1><?php if ($all): ?><span style="display:flex;gap:8px"><a class="a-btn" href="?export=audience" title="Opted-in sign-ups only, for Meta Custom Audiences and Google Customer Match">Export ad audience</a><a class="a-btn" href="?export=csv">Export CSV</a></span><?php endif; ?></div>
 <div class="a-stats">
   <div><b><?= count($joined) ?></b><span>Joined</span></div>
   <div><b><?= $today ?></b><span>Today</span></div>

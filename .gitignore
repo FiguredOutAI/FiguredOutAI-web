@@ -1,0 +1,21 @@
+# Server data: leads, waitlist sign-ups, admin login, settings (API keys). Never commit.
+public_html/content/
+public_html/uploads/
+
+# Real config holds the cron token. Copy app/config.example.php to app/config.php instead.
+public_html/app/config.php
+
+# Build packages, backups and old builds
+*.zip
+*.tgz
+backups/
+FiguredOutAI-v2/
+figuredoutai v2.0/
+
+# Private working notes
+OVERNIGHT-TASKS.md
+
+# Local tooling
+node_modules/
+.DS_Store
+Thumbs.db

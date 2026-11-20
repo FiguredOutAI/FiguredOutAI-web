@@ -274,7 +274,7 @@ if (wls.length) {
         const j = await api({ step: 'finish', ref: w.dataset.ref, name: f.name.value, company: f.company.value, phone: f.phone.value,
           channels: [...s2.querySelectorAll('input[name="channels[]"]:checked')].map(x => x.value), consent: '1' });
         if (j.count != null) $$('[data-wl-count]').forEach(c => c.textContent = Number(j.count).toLocaleString('en-US'));
-        if (window.foaiTrack) window.foaiTrack('signup');
+        if (window.foaiTrack) window.foaiTrack('signup', j.eid || '');
         wls.forEach(x => done(x));
       } catch (err) { msg(m, err.message, true); b.disabled = false; }
     });

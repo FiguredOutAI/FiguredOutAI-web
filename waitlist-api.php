@@ -6,6 +6,7 @@
  */
 require __DIR__ . '/app/lib.php';
 require __DIR__ . '/app/waitlist.php';
+require __DIR__ . '/app/marketing.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -92,13 +93,25 @@ if ($step === 'finish') {
     $first = $w['stage'] !== 'joined';
     $w = array_merge($w, ['name' => $name, 'company' => $str('company', 160), 'phone' => $phone, 'channels' => $channels, 'consent' => true,
         'consent_at' => date('c'), 'consent_text' => 'Keep me posted about my access and launch updates by email or WhatsApp.', 'stage' => 'joined', 'joined_at' => $w['joined_at'] ?: date('c')]);
+    // Separate, optional opt-in for promotional email and ad matching. Never pre-ticked.
+    $marketing = !empty($_POST['marketing']);
+    if ($marketing !== !empty($w['marketing'])) {
+        $w['marketing'] = $marketing;
+        $w['marketing_at'] = date('c');
+        $w['marketing_text'] = $marketing ? 'Also send me product news, tips and offers, and let FiguredOutAI use my email to show me relevant ads.' : '';
+    }
     $all[$i] = $w;
     waitlist_save($all);
     $total = waitlist_joined_count($all);
     $unlock();
 
     // Answer the visitor first, then send the emails, so a slow mail server never keeps them waiting.
-    $body = json_encode(['ok' => true, 'stage' => 'joined', 'count' => waitlist_display_count(), 'first' => $first], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    // eid lets the browser pixel and the server event share one ID, so Meta counts the sign-up once.
+    $body = json_encode(['ok' => true, 'stage' => 'joined', 'count' => waitlist_display_count(), 'first' => $first, 'eid' => $first ? 'wl-' . $w['id'] : ''], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    // What the Conversions API needs from this request, captured before the connection closes.
+    $req = ['ip' => $visitor, 'ua' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 400),
+        'fbp' => preg_match('~^fb\.\d\.\d+\.\d+$~', (string)($_COOKIE['_fbp'] ?? '')) ? $_COOKIE['_fbp'] : '',
+        'fbc' => preg_match('~^fb\.\d\.\d+\.[\w-]+$~', (string)($_COOKIE['_fbc'] ?? '')) ? $_COOKIE['_fbc'] : ''];
     header('Content-Length: ' . strlen($body));
     header('Connection: close');
     echo $body;
@@ -109,13 +122,15 @@ if ($step === 'finish') {
 
     if ($first && !$w['welcome_sent']) {
         [$sub, $html, $text] = welcome_email($w);
-        if (send_mail($w['email'], $sub, $html, $text)) {
+        if (send_mail($w['email'], $sub, $html, $text, null, unsub_headers($w['email']))) {
             $lock(); $all = waitlist_all(); $j = waitlist_find($all, 'id', $w['id']);
             if ($j !== null) { $all[$j]['welcome_sent'] = date('c'); waitlist_save($all); }
             $unlock();
         }
         notify_team($w, $total);
+        meta_capi_signup($w, 'wl-' . $w['id'], $req);
     }
+    resend_sync_contact($w);
     exit;
 }
 

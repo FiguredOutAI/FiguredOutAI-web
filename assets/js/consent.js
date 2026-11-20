@@ -161,12 +161,12 @@
 
   /* ---------- public helpers ---------- */
   // Conversion event for a submitted enquiry. Only fires on platforms the visitor consented to.
-  window.foaiTrack = function (event) {
+  window.foaiTrack = function (event, eid) {
     if (!state) return;
     if (event === 'signup') {
       if (state.a && IDS.ga4) gtag('event', 'sign_up', { method: 'waitlist' });
       if (state.m && IDS.ads && IDS.adsLead) gtag('event', 'conversion', { send_to: IDS.ads + '/' + IDS.adsLead });
-      if (state.m && IDS.meta && window.fbq) window.fbq('track', 'CompleteRegistration');
+      if (state.m && IDS.meta && window.fbq) window.fbq('track', 'CompleteRegistration', {}, eid ? { eventID: eid } : {});
       return;
     }
     if (event !== 'lead') return;

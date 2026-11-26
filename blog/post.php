@@ -37,6 +37,7 @@ page_open([
          'author' => ['@type' => str_contains(strtolower($post['author']), 'team') ? 'Organization' : 'Person', 'name' => $post['author']],
          'publisher' => ['@type' => 'Organization', 'name' => 'FiguredOutAI', 'logo' => ['@type' => 'ImageObject', 'url' => url('assets/img/icon-512.png')]],
          'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $url]],
+        ...post_faq_jsonld($post['content']),
         ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
             ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
             ['@type' => 'ListItem', 'position' => 2, 'name' => 'Blog', 'item' => url('blog/')],

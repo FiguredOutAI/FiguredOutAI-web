@@ -33,6 +33,7 @@ RewriteRule ^how-it-works/?$ /#process [R=301,L,NE]
 
 # Clean URLs
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
+RewriteRule ^llms\.txt$ llms.php [L]
 RewriteRule ^(blog/)?feed\.xml$ feed.php [L]
 RewriteRule ^(privacy|terms|about|waitlist|unsubscribe)/$ /$1 [R=301,L]
 RewriteRule ^(privacy|terms|about|waitlist|unsubscribe)$ $1.php [L]

@@ -117,6 +117,20 @@ function all_tags(): array {
     uasort($t, fn($a, $b) => $b['count'] <=> $a['count']);
     return $t;
 }
+/**
+ * FAQPage structured data from a post's "## FAQ" section ("### Question" followed by its answer).
+ * Returns [] when a post has no FAQ, so it can be spread into the JSON-LD list.
+ */
+function post_faq_jsonld(string $md): array {
+    if (!preg_match('~^##\s+(?:FAQ|FAQs|Frequently asked questions)\s*$(.*?)(?=^##\s|\z)~ims', $md, $m)) return [];
+    preg_match_all('~^###\s+(.+?)\s*$\n+(.+?)(?=^###\s|\z)~ms', $m[1], $qs, PREG_SET_ORDER);
+    $items = [];
+    foreach ($qs as $q) {
+        $a = trim(preg_replace('~\s+~', ' ', html_entity_decode(strip_tags(md_to_html(trim($q[2]))), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        if ($a !== '') $items[] = ['@type' => 'Question', 'name' => trim($q[1]), 'acceptedAnswer' => ['@type' => 'Answer', 'text' => $a]];
+    }
+    return $items ? [['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => $items]] : [];
+}
 function reading_time(string $md): int { return max(1, (int)ceil(str_word_count(strip_tags($md)) / 220)); }
 function word_count(string $md): int { return str_word_count(strip_tags($md)); }
 function excerpt(array $p, int $len = 160): string {

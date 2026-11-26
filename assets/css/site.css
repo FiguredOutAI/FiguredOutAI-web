@@ -1,7 +1,7 @@
 :root{
   --bg:#05070A; --bg2:#080B10; --surface:#0B1016; --surface2:#10161E;
   --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12);
-  --text:#EEF1F4; --muted:#8B95A3; --dim:#5B6572;
+  --text:#EEF1F4; --muted:#8B95A3; --dim:#7A8494;
   --cyan:#22E3F2; --cyan-d:#0E8C99; --orange:#FF7A2F;
   --r:22px; --maxw:1240px;
   --sans:"Geist",system-ui,-apple-system,Segoe UI,sans-serif;
@@ -797,3 +797,7 @@ section{padding:96px 0}
 
 /* phones and reduced motion: no animated grain overlay (full-screen repaint) */
 @media (max-width:820px),(prefers-reduced-motion:reduce){body::after{display:none}}
+
+/* accessibility: readable marquee names; inline links don't rely on colour alone */
+.track span{color:#7A8494}
+.tlink,.sec-head p a,.team-intro a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}

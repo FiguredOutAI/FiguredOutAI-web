@@ -16,17 +16,17 @@ $slice = array_slice($posts, ($page - 1) * $per, $per);
 $base = $tag ? "/blog/tag/$tag" : '/blog';
 $pageUrl = fn($n) => $n <= 1 ? "$base/" : "$base/page/$n";
 $tagName = $tag ? $tags[$tag]['name'] : null;
-$title = $tag ? "$tagName articles | FiguredOutAI Blog" : 'Blog: AI agents, automation & infrastructure | FiguredOutAI';
+$title = $tag ? "$tagName articles | FiguredOutAI Blog" : 'Blog: AI for WhatsApp, Instagram and business automation | FiguredOutAI';
 if ($page > 1) $title = "Page $page · " . $title;
 $desc = $tag ? "Articles on $tagName from FiguredOutAI: practical guides on building and running AI in business."
-             : 'Practical writing on AI agents, workflow automation, AI infrastructure and AI-driven sales, from the team at FiguredOutAI.';
+             : 'AI news, AI adoption in India, WhatsApp and Instagram automation, and practical guides to AI in business, from the team building FiguredOutAI.';
 
 $extra = '';
 if ($page > 1) $extra .= '<link rel="prev" href="' . e(url(ltrim($pageUrl($page - 1), '/'))) . "\">\n";
 if ($page < $pages) $extra .= '<link rel="next" href="' . e(url(ltrim($pageUrl($page + 1), '/'))) . "\">\n";
 
 page_open([
-    'title' => $title, 'description' => $desc, 'noindex' => $tag && (int)$tags[$tag]['count'] < 3, // thin tag pages: noindex,follow 'canonical' => url(ltrim($pageUrl($page), '/')), 'extra' => $extra, 'og_kicker' => 'Blog',
+    'title' => $title, 'description' => $desc, 'noindex' => $tag && (int)$tags[$tag]['count'] < 3, /* thin tag pages: noindex,follow */ 'canonical' => url(ltrim($pageUrl($page), '/')), 'extra' => $extra, 'og_kicker' => 'Blog',
     'jsonld' => [
         ['@context' => 'https://schema.org', '@type' => 'Blog', 'name' => 'FiguredOutAI Blog', 'url' => url('blog/'), 'publisher' => org_jsonld(),
          'blogPost' => array_map(fn($p) => ['@type' => 'BlogPosting', 'headline' => $p['title'], 'url' => post_url($p), 'datePublished' => date('c', $p['ts'])], $slice)],

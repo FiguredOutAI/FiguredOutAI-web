@@ -84,7 +84,13 @@ function page_close(array $opt = []): void {
     <div class="f-bot"><span>© <?= date('Y') ?> FiguredoutAI LLP. All rights reserved.</span><span><a href="/privacy">Privacy</a> · <a href="/privacy#cookies">Cookies</a> · <button type="button" class="link-btn" data-cookie-settings>Cookie settings</button> · <a href="/terms">Terms</a></span></div>
   </div>
 </footer>
-<?php if ($home): ?><script type="module" src="<?= asset('js/scene.js') ?>"></script><?php endif; ?>
+<?php if ($home): ?><script>
+/* The three.js scene (about 670 KB) loads once the page is usable, so text and the waitlist form are interactive first. */
+(function () { var go = function () { import('<?= asset('js/scene.js') ?>'); };
+  var phone = matchMedia('(max-width: 820px)').matches; // phones: give the page a few quiet seconds first
+  var idle = function () { setTimeout(function () { ('requestIdleCallback' in window) ? requestIdleCallback(go, { timeout: 2500 }) : go(); }, phone ? 3000 : 0); };
+  document.readyState === 'complete' ? idle() : addEventListener('load', idle, { once: true }); })();
+</script><?php endif; ?>
 <script src="<?= asset('js/consent.js') ?>" defer></script>
 <script src="<?= asset('js/site.js') ?>" defer></script>
 </body>

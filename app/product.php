@@ -102,8 +102,8 @@ function product_hero(array $o = []): void {
     <div class="p-hero-copy">
       <a href="#platform" class="pill enter" style="--i:0"><b>EARLY ACCESS</b><span class="dot"></span> <?= e($o['kicker']) ?> <span class="arr">→</span></a>
       <<?= $h ?> class="split hero-title" id="h1"><?= $o['title'] ?></<?= $h ?>>
-      <p class="lead enter" style="--i:2"><?= $o['lead'] ?></p>
-      <div class="enter" style="--i:3"><?= waitlist_form($o['form']) ?></div>
+      <p class="lead"><?= $o['lead'] ?></p>
+      <div><?= waitlist_form($o['form']) ?></div>
     </div>
     <div class="hero-stage mock-stage enter" style="--i:2" id="mockStage">
       <div class="logo-anchor" id="logoAnchor" aria-hidden="true"></div>

@@ -8,7 +8,7 @@ $person = fn($id, $name, $title, $links) => ['@type' => 'Person', '@id' => url('
     'worksFor' => ['@id' => url('/#organization')]] + ($links ? ['sameAs' => array_values($links)] : []);
 page_open([
     'title' => 'About FiguredOutAI | Founders Tanishk Singhal & Yashvardhan Awasthi',
-    'description' => 'FiguredOutAI (FiguredoutAI LLP, also written Figured Out AI) is an AI solutions and AI-native infrastructure company founded by Tanishk Singhal and Yashvardhan Awasthi.',
+    'description' => 'FiguredOutAI (FiguredoutAI LLP) builds an AI inbox for WhatsApp, Instagram and Messenger, plus custom AI. Founded by Tanishk Singhal and Yashvardhan Awasthi.',
     'canonical' => url('about'),
     'og_title' => 'Meet the founders: Tanishk Singhal & Yashvardhan Awasthi', 'og_kicker' => 'About FiguredOutAI',
     'jsonld' => [

@@ -16,6 +16,7 @@ $old = ['~^/services/?$~' => '/#capabilities', '~^/industries(/.*)?$~i' => '/#in
         '~^/(reference-build|decision-layer)/?$~' => '/#platform', '~^/why-us/?$~' => '/#principles', '~^/how-it-works/?$~' => '/#process'];
 foreach ($old as $re => $to) if (preg_match($re, $path)) { header('Location: ' . $to, true, 301); exit; }
 if ($path === '/sitemap.xml') return $go('sitemap.php');
+if ($path === '/llms.txt') return $go('llms.php');
 if (preg_match('~^/(blog/)?feed\.xml$~', $path)) return $go('feed.php');
 if (preg_match('~^/(privacy|terms|about|waitlist|unsubscribe)/?$~', $path, $m)) return $go($m[1] . '.php');
 if (preg_match('~^/lp/([a-z0-9-]+)/?$~', $path, $m) && is_file("$root/lp/{$m[1]}.php")) return $go("lp/{$m[1]}.php");
